@@ -6,10 +6,10 @@ import settings
 
 
 def cleanfiles():
-    shutil.rmtree("./frames")
+    rmtreeexist("./frames")
     os.mkdir("./frames")
 
-    shutil.rmtree("./vids")
+    rmtreeexist("./vids")
     os.mkdir("./vids")
 
     removeexist("still.png")
@@ -20,6 +20,10 @@ def cleanfiles():
 def removeexist(path):
     if os.path.exists(path):
         os.remove(path)
+
+def rmtreeexist(path):
+    if os.path.exists(path):
+        shutil.rmtree(path)
 
 if __name__ == "__main__":
     print("Manual clean")
