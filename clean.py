@@ -15,6 +15,7 @@ def cleanfiles():
     removeexist("still.png")
     removeexist(settings.outputfile)
     removeexist("concat.txt")
+    removeexist("framerate.txt")
     removeexist("audio.aac")
 
 def removeexist(path):
