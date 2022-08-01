@@ -46,32 +46,35 @@ def populate_frames(path):
         this.framerate = 60
         this.framerate_field = "60"
     print("Framerate is " + str(framerate))
-    this.delta_time = 1/framerate
+    
 
     frameratefile = open("./framerate.txt", "w")
-    frameratefile.write(framerate_field)
+    frameratefile.write(str(framerate))
     frameratefile.close()
     
 
-def parse_framerate(framerate_field):
+def parse_framerate(ff):
     framerate = 30
-    if "/" in framerate_field:
-        dividends = framerate_field.split("/")
+    print("parsing the: " + ff)
+    if "/" in ff:
+        dividends = ff.split("/")
         framerate = float(dividends[0])/float(dividends[1])
-        this.use_rawfield = True
+        this.delta_time = 1/framerate
+        this.framerate_field = ff
+        this.use_rawfield = False
     else:
-        framerate = float(framerate_field)
+        framerate = float(ff)
+        this.delta_time = 1/framerate
     return framerate
 
 
 
 # dupframe(100)
 
-
-size_formula = "return (origwidth, origheight*(sin(frame*delta_time*20)+1)/2)"
+workproj = None
 
 def get_size(origwidth, origheight, frame, maxframe):
-    eval(size_formula)
+    return workproj.get_size_at_time(float(frame))
 
 # Create the concat file that FFMPEG needs
 
@@ -79,10 +82,17 @@ globalframecount = 0
 
 framesprocessed = 0
 
-def populateframecount():
+vidsize = (0, 0)
 
+def populateframecount():
     framelist = listdir("./frames")
     this.globalframecount = len(framelist)
+
+def populatevidsize():
+    framelist = listdir("./frames")
+    im = Image.open("./frames/" + framelist[0])
+    this.vidsize = im.size
+    im.close()
 
 frameQueue = PriorityQueue()
 workQueue = Queue()
@@ -105,8 +115,10 @@ def workone(name):
         # Run size formula
         size = get_size(width, height, framenumber, framecount)
         size = (int(max(size[0], 2)), int(max(size[1], 2)))
+        print("Resizing " + str(framenumber) + " to " + str(size))
         im = im.resize(size)
         im.save(path)
+        im.close()
         #print("resized " + str(framenumber) + "/" +
         #      str(framecount) + " to " + str(size))
         vidpath = "./vids/" + strnum + ".webm"
@@ -121,6 +133,7 @@ def workone(name):
 
 def spitConcatFile():
     file = open("./concat.txt", "w")
+    print(this.delta_time)
     while not frameQueue.empty():
         fr = frameQueue.get()[1]
         file.write("file '" + fr.path + "'\nduration " + str(fr.duration) + "\n")
@@ -134,13 +147,17 @@ def do_conversion_resize(name):
 def finalvid():
     if not settings.dupeframe:
         use = str(framerate)
+        if float(framerate).is_integer:
+            use = str(int(framerate))
         if use_rawfield:
             use = framerate_field
-        system("ffmpeg -hide_banner -y -r " + use +
-               " -f concat -safe 0 -i concat.txt -i audio.opus -c copy test.webm")
+        print(str(framerate))
+        print(framerate_field)
+        print(use)
+        system("ffmpeg -safe 0 -hide_banner -y -f concat -i concat.txt -i audio.opus -c copy -r " + use + " test.webm")
     else:
-        system("ffmpeg -hide_banner -y -r " + str(framerate) +
-               " -f concat -safe 0 -i concat.txt -c copy test.webm")
+        print("Outputting with framerate " + str(framerate))
+        system("ffmpeg -safe 0 -hide_banner -y -r " + str(framerate) +" -f concat -i concat.txt -c copy test.webm")
 
 #system("ffmpeg -y -framerate 30 -f image2 -i frames/%04d.png -c:v libvpx-vp9 -pix_fmt yuva420p output.webm")
 
