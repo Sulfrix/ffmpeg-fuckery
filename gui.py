@@ -407,9 +407,9 @@ def main():
                             framecache = {}
 
                             previewframe = 1
-                        
+
                             previewfollowskey = False
-                        
+
                             preview_surf = None
                             scaled_preview = None
                             lastsize = (-1, -1)
@@ -481,7 +481,6 @@ def main():
                 fuckery.populateframecount()
                 fuckery.populatevidsize()
                 proj = VideoProject(fuckery.vidsize, input_filepath)
-                path_memory = input_filepath
                 showsetup = False
                 showmainwindow = True
                 editor_selected_timeline = 0
@@ -494,7 +493,6 @@ def main():
                     fuckery.populateframecount()
                     fuckery.populatevidsize()
                     proj = VideoProject(fuckery.vidsize, input_filepath)
-                    path_memory = input_filepath
                     showsetup = False
                     showmainwindow = True
                     editor_selected_timeline = 0

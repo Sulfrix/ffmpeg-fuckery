@@ -31,8 +31,11 @@ delta_time = 1/60
 
 def populate_frames(path):
     if not settings.dupeframe:
-
-        probe = ffmpeg.probe(path)
+        try:
+            probe = ffmpeg.probe(path)
+        except ffmpeg._run.Error as err:
+            print(err.stderr)
+            
 
         system("ffmpeg -hide_banner -i " + path + " -pix_fmt rgba frames/%04d.png")
         system("ffmpeg -y -hide_banner -loglevel error -i " + path + " audio.opus")
