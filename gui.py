@@ -551,7 +551,7 @@ def main():
                 if (imgui.button("Dump")):
                     print (json.dumps(proj.dictify(), indent=4))
                 imgui.text("Video size: " + str(proj.defaultsize))
-                dontcare, previewfollowskey = imgui.checkbox("Preview follows keyframe move", previewfollowskey)
+                dontcare, previewfollowskey = imgui.checkbox("Preview current keyframe", previewfollowskey)
                 timechanged, previewframe = imgui.slider_int("Preview frame", previewframe, 1, fuckery.globalframecount)
                 imgui.text("Timeline ID: " + str(editor_selected_timeline))
                 items = list(map(lambda x: x.name, proj.timelines))
@@ -560,6 +560,9 @@ def main():
                     editor_keyframe_index = 0
                 curtl = proj.timelines[editor_selected_timeline]
                 kf_changed, editor_keyframe_index = imgui.slider_int("Keyframe", editor_keyframe_index, 0, len(curtl.keyframes)-1)
+                if kf_changed:
+                    if previewfollowskey:
+                        previewframe = curtl.keyframes[editor_keyframe_index].time
                 curkf = curtl.keyframes[editor_keyframe_index]
                 cursor = imgui.get_cursor_pos()
                 scur = imgui.get_cursor_screen_pos()
@@ -567,7 +570,7 @@ def main():
                 tlw = 400
                 tlh = 20
                 kfw = 1
-                kfh = 5
+                kfh = 6
                 draw_list.add_rect_filled(scur[0], scur[1], scur[0]+tlw, scur[1]+tlh, imgui.get_color_u32_rgba(0.5, 0.5, 0.5, 1))
                 for i in range(len(curtl.keyframes)):
                     kf = curtl.keyframes[i]
@@ -575,8 +578,10 @@ def main():
                     color = imgui.get_color_u32_rgba(59/255, 118/255, 255/255, 1)
                     if kf == curkf:
                         color = imgui.get_color_u32_rgba(0.5, 1, 0.8, 1)
-                    draw_list.add_rect_filled(xpos-1, scur[1], xpos+kfw, scur[1]+tlh, color)
+                    draw_list.add_rect_filled(xpos, scur[1], xpos+kfw, scur[1]+tlh, color)
                     draw_list.add_circle_filled(xpos, scur[1]+tlh/2, kfh, color, 4)
+                xpos = scur[0]+((tlw-kfw)*((previewframe-1)/(fuckery.globalframecount-1)))
+                draw_list.add_rect_filled(xpos, scur[1], xpos+kfw, scur[1]+tlh, imgui.get_color_u32_rgba(1, 0, 0, 1))
                 cursor = (cursor[0], cursor[1]+tlh+4)
                 imgui.set_cursor_pos(cursor)
                 if imgui.button("Add keyframe"):
@@ -584,20 +589,28 @@ def main():
                     curtl.keyframes.append(curkf)
                     curtl.updatekeys()
                     editor_keyframe_index = curtl.keyframes.index(curkf)
+                    if previewfollowskey:
+                        previewframe = curtl.keyframes[editor_keyframe_index].time
                 imgui.same_line()
                 if imgui.button("Remove keyframe"):
-                    if len(curtl.keyframes) > 1:
+                    if editor_keyframe_index > 1:
                         editor_keyframe_index = editor_keyframe_index - 1
                         curtl.keyframes.remove(curkf)
+                    if previewfollowskey:
+                        previewframe = curtl.keyframes[editor_keyframe_index].time
                 if imgui.button("Prev. keyframe"):
                     editor_keyframe_index = editor_keyframe_index - 1
                     if editor_keyframe_index < 0:
                         editor_keyframe_index = len(curtl.keyframes)-1
+                    if previewfollowskey:
+                        previewframe = curtl.keyframes[editor_keyframe_index].time
                 imgui.same_line()
                 if imgui.button("Next keyframe"):
                     editor_keyframe_index = editor_keyframe_index + 1
                     if editor_keyframe_index == len(curtl.keyframes):
                         editor_keyframe_index = 0
+                    if previewfollowskey:
+                        previewframe = curtl.keyframes[editor_keyframe_index].time
                 valuechanged, curkf.value = imgui.drag_int("Keyframe value", curkf.value, 1, 2, 2000)
                 timechanged, curkf.time = imgui.slider_int("Keyframe time position", curkf.time, 1, fuckery.globalframecount)
                 if timechanged:
